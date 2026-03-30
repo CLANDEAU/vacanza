@@ -31,36 +31,41 @@ const supabaseUrl = "https://vvyujtzftcdbfkzvusbh.supabase.co";
 const supabaseKey = "sb_publishable_nHB_OJQkdUlDht5716YXxA_mMcfFOLL"; // remplacez par votre ANON_KEY
 const supabase = window.supabase.createClient(supabaseUrl,supabaseKey);
 
-async function loadPhotos(){
+async function loadBucketPhotos(){
   const debug = document.getElementById("debug");
   const gallery = document.getElementById("gallery");
 
   try{
-    const { data, error } = await supabase.from("photo").select("*").order("id",{ascending:true});
+    // lister tous les fichiers du bucket "photo"
+    const { data, error } = await supabase.storage.from('photo').list('');
 
     if(error){
       debug.innerText = "Erreur Supabase : " + error.message;
       return;
     }
 
-    if(!data || data.length===0){
-      debug.innerText = "La table 'photo' est vide ou aucune photo n'est publique.";
+    if(!data || data.length === 0){
+      debug.innerText = "Aucune photo dans le bucket.";
       return;
     }
 
     debug.innerText = "Photos trouvées : " + data.length;
     gallery.innerHTML = "";
 
-    data.forEach(photo=>{
-      const card=document.createElement("div");
-      card.className="photo-card";
+    data.forEach(file=>{
+      // générer l'URL publique
+      const url = supabase.storage.from('photo').getPublicUrl(file.name).data.publicUrl;
 
-      const img=document.createElement("img");
-      img.src=photo.url;
+      const card = document.createElement("div");
+      card.className = "photo-card";
 
-      const uploader=document.createElement("div");
-      uploader.className="uploader";
-      uploader.innerText="uploadé par : "+photo.by;
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = file.name;
+
+      const uploader = document.createElement("div");
+      uploader.className = "uploader";
+      uploader.innerText = file.name;
 
       card.appendChild(img);
       card.appendChild(uploader);
@@ -68,11 +73,12 @@ async function loadPhotos(){
     });
 
   }catch(e){
-    debug.innerText="Erreur JS : "+e;
+    debug.innerText = "Erreur JS : " + e;
   }
 }
 
-loadPhotos();
+loadBucketPhotos();
 </script>
+
 </body>
 </html>
