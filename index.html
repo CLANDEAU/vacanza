@@ -3,88 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <title>Galerie des vacances</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-h1 { text-align: center; }
-.gallery { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.photo-card { background: #fff; padding: 5px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 200px; }
-.photo-card img { width: 100%; border-radius: 5px; }
-.uploader { margin-top: 5px; font-size: 0.9em; color: #555; text-align: center; }
+body{font-family:Arial;padding:20px;background:#f5f5f5;}
+h1{text-align:center;}
+.gallery{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+.photo-card{background:#fff;padding:5px;border-radius:5px;box-shadow:0 2px 5px rgba(0,0,0,0.1);width:200px;}
+.photo-card img{width:100%;border-radius:5px;}
+.uploader{text-align:center;font-size:12px;margin-top:5px;color:#555;}
+#debug{margin-top:20px;padding:10px;background:#fff3cd;}
 </style>
 </head>
-
 <body>
 
 <h1>Galerie des vacances</h1>
 <div class="gallery" id="gallery"></div>
+<div id="debug">Chargement...</div>
 
 <script>
-
 // protection mot de passe
-if (sessionStorage.getItem("auth") !== "true") {
-  window.location.href = "admin.html";
+if(sessionStorage.getItem("auth") !== "true"){
+  window.location.href="admin.html";
 }
 
-// connexion Supabase
+// Supabase
 const supabaseUrl = "https://vvyujtzftcdbfkzvusbh.supabase.co";
 const supabaseKey = "sb_publishable_nHB_OJQkdUlDht5716YXxA_mMcfFOLL"; // remplacez par votre ANON_KEY
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase.createClient(supabaseUrl,supabaseKey);
 
-async function loadPhotos() {
-
+async function loadPhotos(){
+  const debug = document.getElementById("debug");
   const gallery = document.getElementById("gallery");
 
-  try {
+  try{
+    const { data, error } = await supabase.from("photo").select("*").order("id",{ascending:true});
 
-    const { data, error } = await supabase
-      .from("photo")
-      .select("*")
-      .order("id", { ascending: true });
-
-    if (error) {
-      console.error("Erreur Supabase :", error.message);
-      gallery.innerHTML = "<p>Erreur Supabase</p>";
+    if(error){
+      debug.innerText = "Erreur Supabase : " + error.message;
       return;
     }
 
-    if (!data || data.length === 0) {
-      gallery.innerHTML = "<p>Aucune photo pour le moment</p>";
+    if(!data || data.length===0){
+      debug.innerText = "La table 'photo' est vide ou aucune photo n'est publique.";
       return;
     }
 
+    debug.innerText = "Photos trouvées : " + data.length;
     gallery.innerHTML = "";
 
-    data.forEach(photo => {
-      const card = document.createElement("div");
-      card.className = "photo-card";
+    data.forEach(photo=>{
+      const card=document.createElement("div");
+      card.className="photo-card";
 
-      const img = document.createElement("img");
-      img.src = photo.url;
-      img.alt = "Photo vacances";
+      const img=document.createElement("img");
+      img.src=photo.url;
 
-      const uploader = document.createElement("div");
-      uploader.className = "uploader";
-      uploader.textContent = "uploadé par : " + photo.by;
+      const uploader=document.createElement("div");
+      uploader.className="uploader";
+      uploader.innerText="uploadé par : "+photo.by;
 
       card.appendChild(img);
       card.appendChild(uploader);
-
       gallery.appendChild(card);
     });
 
-  } catch(e) {
-    console.error("Erreur JS :", e);
-    gallery.innerHTML = "<p>Erreur JS : voir console</p>";
+  }catch(e){
+    debug.innerText="Erreur JS : "+e;
   }
-
 }
 
 loadPhotos();
-
 </script>
-
 </body>
 </html>
