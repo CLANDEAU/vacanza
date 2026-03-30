@@ -59,6 +59,10 @@
       card.appendChild(img);
       card.appendChild(uploader);
       gallery.appendChild(card);
+    if (data.length === 0) {
+  gallery.innerHTML = "<p>Aucune photo pour le moment</p>";
+  return;
+}
     });
   }
 
