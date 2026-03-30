@@ -1,51 +1,60 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Photos vacances</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-    h1 { text-align: center; }
-    .gallery { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-    .photo-card { background: #fff; padding: 5px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 200px; }
-    .photo-card img { width: 100%; border-radius: 5px; }
-    .uploader { margin-top: 5px; font-size: 0.9em; color: #555; text-align: center; }
-  </style>
+<meta charset="UTF-8">
+<title>Galerie des vacances</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+h1 { text-align: center; }
+.gallery { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.photo-card { background: #fff; padding: 5px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 200px; }
+.photo-card img { width: 100%; border-radius: 5px; }
+.uploader { margin-top: 5px; font-size: 0.9em; color: #555; text-align: center; }
+</style>
 </head>
+
 <body>
 
 <h1>Galerie des vacances</h1>
 <div class="gallery" id="gallery"></div>
 
 <script>
-  // --- Vérification mot de passe ---
-  if (sessionStorage.getItem("auth") !== "true") {
-    window.location.href = "admin.html";
-  }
 
-  // --- Connexion Supabase ---
-  const supabaseUrl = "https://vvyujtzftcdbfkzvusbh.supabase.co"; // remplacez par votre URL
-  const supabaseKey = "sb_publishable_nHB_OJQkdUlDht5716YXxA_mMcfFOLL"; // remplacez par votre anon key
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+// protection mot de passe
+if (sessionStorage.getItem("auth") !== "true") {
+  window.location.href = "admin.html";
+}
 
-  // --- Récupération des photos ---
-  async function loadPhotos() {
+// connexion Supabase
+const supabaseUrl = "https://vvyujtzftcdbfkzvusbh.supabase.co";
+const supabaseKey = "sb_publishable_nHB_OJQkdUlDht5716YXxA_mMcfFOLL"; // remplacez par votre ANON_KEY
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+async function loadPhotos() {
+
+  const gallery = document.getElementById("gallery");
+
+  try {
+
     const { data, error } = await supabase
-      .from('photo')
-      .select('*')
-      .order('id', { ascending: true }); // ou par created_at si vous l'ajoutez
+      .from("photo")
+      .select("*")
+      .order("id", { ascending: true });
 
     if (error) {
       console.error("Erreur Supabase :", error.message);
+      gallery.innerHTML = "<p>Erreur Supabase</p>";
       return;
     }
-    if (data.length === 0) {
+
+    if (!data || data.length === 0) {
       gallery.innerHTML = "<p>Aucune photo pour le moment</p>";
       return;
     }
 
-    const gallery = document.getElementById("gallery");
     gallery.innerHTML = "";
 
     data.forEach(photo => {
@@ -58,15 +67,23 @@
 
       const uploader = document.createElement("div");
       uploader.className = "uploader";
-      uploader.textContent = `uploadé par : ${photo.by}`;
+      uploader.textContent = "uploadé par : " + photo.by;
 
       card.appendChild(img);
       card.appendChild(uploader);
+
       gallery.appendChild(card);
     });
+
+  } catch(e) {
+    console.error("Erreur JS :", e);
+    gallery.innerHTML = "<p>Erreur JS : voir console</p>";
   }
 
-  loadPhotos();
+}
+
+loadPhotos();
+
 </script>
 
 </body>
